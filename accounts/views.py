@@ -3,8 +3,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from .forms import CustomUserCreationForm, CustomUserChangeForm
+from django.contrib.auth.forms import PasswordChangeForm
 
-from .forms import CustomUserCreationForm
 
 # Create your views here.
 def login(request):
@@ -23,6 +24,7 @@ def login(request):
         'form': form,
     }
     return render(request, "accounts/login.html", context)
+
 
 @login_required
 def logout(request):
@@ -45,3 +47,41 @@ def signup(request):
         'form': form,
     }
     return render(request, 'accounts/signup.html', context)
+
+
+@login_required
+def delete(request):
+    if request.method == 'POST':
+        request.user.delete()
+        return redirect('')
+
+
+@login_required
+def update(request):
+    if request.method == 'POST':
+        form = CustomUserChangeForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('')
+    else:
+        form = CustomUserChangeForm(instance=request.user)
+    context = {
+        'form': form,
+    }
+    return render(request, 'accounts/update.html', context)
+
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            return redirect('')
+    else:
+        form = PasswordChangeForm(request.user)
+    context = {
+        'form': form,
+    }
+    return render(request, 'accounts/change_password.html', context)
